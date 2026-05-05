@@ -1,0 +1,1339 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Arduino PT — Plataforma Educativa</title>
+  <meta name="description" content="Website educativo sobre Arduino. Aprende eletrónica e programação com projetos práticos para todos os níveis." />
+
+  <!-- Fontes -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,700;1,400&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ══════════════════════════════════════
+       VARIÁVEIS E RESET
+    ══════════════════════════════════════ */
+    :root {
+      --bg:          #0d1117;
+      --surface:     #161b22;
+      --surface2:    #21262d;
+      --border:      #30363d;
+      --accent:      #00e5a0;
+      --accent2:     #0ea5e9;
+      --accent3:     #f97316;
+      --text:        #e6edf3;
+      --text-muted:  #8b949e;
+      --text-dim:    #484f58;
+      --mono:        'Space Mono', monospace;
+      --body:        'DM Sans', sans-serif;
+      --radius:      8px;
+      --trans:       0.2s ease;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html {
+      scroll-behavior: smooth;
+      /* Tamanho de fonte base ≥ 16 px — acessibilidade para baixa visão */
+      font-size: 16px;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--body);
+      /* Altura de linha generosa para legibilidade / dislexia */
+      line-height: 1.75;
+      min-height: 100vh;
+    }
+
+    img { max-width: 100%; height: auto; display: block; }
+
+    a { color: var(--accent2); }
+    a:hover { color: var(--accent); }
+
+    /* Foco visível em TODOS os elementos interativos (teclado / switch access) */
+    :focus-visible {
+      outline: 3px solid var(--accent);
+      outline-offset: 3px;
+      border-radius: 4px;
+    }
+
+    /* ══════════════════════════════════════
+       SKIP LINK — leitores de ecrã / teclado
+    ══════════════════════════════════════ */
+    .skip-link {
+      position: absolute;
+      top: -120px;
+      left: 1rem;
+      z-index: 9999;
+      background: var(--accent);
+      color: #000;
+      font-family: var(--mono);
+      font-size: 0.875rem;
+      font-weight: 700;
+      padding: 0.75rem 1.25rem;
+      border-radius: var(--radius);
+      text-decoration: none;
+      transition: top var(--trans);
+    }
+    .skip-link:focus { top: 1rem; }
+
+    /* ══════════════════════════════════════
+       CABEÇALHO / NAVEGAÇÃO
+    ══════════════════════════════════════ */
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .header-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 64px;
+    }
+
+    .logo {
+      font-family: var(--mono);
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--accent);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .logo-box {
+      width: 32px; height: 32px;
+      background: var(--accent);
+      border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .logo-box svg { width: 18px; height: 18px; }
+
+    /* botão hamburger (mobile) */
+    #nav-toggle {
+      display: none;
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text);
+      font-size: 1.25rem;
+      line-height: 1;
+      padding: 0.45rem 0.6rem;
+      cursor: pointer;
+    }
+
+    nav ul {
+      display: flex;
+      list-style: none;
+      gap: 0.25rem;
+    }
+
+    nav a {
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      text-decoration: none;
+      padding: 0.5rem 0.875rem;
+      border-radius: var(--radius);
+      display: block;
+      transition: background var(--trans), color var(--trans);
+      white-space: nowrap;
+    }
+    nav a:hover,
+    nav a[aria-current="page"] {
+      background: var(--surface2);
+      color: var(--accent);
+    }
+
+    /* ══════════════════════════════════════
+       PÁGINAS (SPA simples)
+    ══════════════════════════════════════ */
+    .page { display: none; }
+    .page.active { display: block; }
+
+    /* ══════════════════════════════════════
+       HERO
+    ══════════════════════════════════════ */
+    .hero {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 5rem 1.5rem 4rem;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4rem;
+      align-items: center;
+    }
+
+    .hero-badge {
+      display: inline-block;
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      color: var(--accent);
+      border: 1px solid var(--accent);
+      border-radius: 2rem;
+      padding: 0.25rem 0.875rem;
+      margin-bottom: 1.5rem;
+      letter-spacing: 0.05em;
+    }
+
+    .hero h1 {
+      font-family: var(--mono);
+      font-size: clamp(1.9rem, 4vw, 3.1rem);
+      line-height: 1.15;
+      margin-bottom: 1.25rem;
+    }
+    .hero h1 em { color: var(--accent); font-style: normal; }
+
+    .hero p {
+      font-size: 1.1rem;
+      color: var(--text-muted);
+      margin-bottom: 2rem;
+    }
+
+    .btn-group { display: flex; gap: 1rem; flex-wrap: wrap; }
+
+    .btn {
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      font-weight: 700;
+      padding: 0.75rem 1.5rem;
+      border-radius: var(--radius);
+      text-decoration: none;
+      border: none;
+      cursor: pointer;
+      transition: all var(--trans);
+      letter-spacing: 0.03em;
+    }
+    .btn-primary { background: var(--accent); color: #000; }
+    .btn-primary:hover { background: #00c48a; color: #000; }
+    .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
+    .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* bloco de código decorativo */
+    .hero-code {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 2rem;
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      line-height: 1.9;
+      color: var(--text-muted);
+      position: relative;
+      overflow: hidden;
+    }
+    .hero-code::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse at top right, rgba(0,229,160,.06), transparent 60%);
+      pointer-events: none;
+    }
+    .dots { display: flex; gap: .5rem; margin-bottom: 1.25rem; }
+    .dot  { width: 12px; height: 12px; border-radius: 50%; }
+    .dot-r { background: #f87171; }
+    .dot-y { background: #facc15; }
+    .dot-g { background: var(--accent); }
+    .cl    { display: flex; gap: 1rem; }
+    .ln    { color: var(--text-dim); user-select: none; min-width: 1.5rem; text-align: right; }
+    .kw    { color: #c084fc; }
+    .fn    { color: var(--accent2); }
+    .cm    { color: var(--text-dim); }
+    .nm    { color: var(--accent); }
+
+    /* ══════════════════════════════════════
+       SECÇÕES GENÉRICAS
+    ══════════════════════════════════════ */
+    .section {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 3rem 1.5rem;
+    }
+
+    /* Títulos com hierarquia clara — H1 → H2 → H3 */
+    .ttl-h1 {
+      font-family: var(--mono);
+      font-size: clamp(1.5rem, 3vw, 2.1rem);
+      color: var(--text);
+      margin-bottom: 0.5rem;
+    }
+    .ttl-h1 em { color: var(--accent); font-style: normal; }
+
+    .ttl-h2 {
+      font-family: var(--mono);
+      font-size: clamp(1.05rem, 2vw, 1.35rem);
+      color: var(--text);
+      margin-bottom: 0.4rem;
+    }
+    .ttl-h2 em { color: var(--accent); font-style: normal; }
+
+    .lead {
+      color: var(--text-muted);
+      font-size: 1rem;
+      margin-bottom: 2.25rem;
+      max-width: 640px;
+    }
+
+    hr.div {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 3rem 0;
+    }
+
+    /* ══════════════════════════════════════
+       CARDS
+    ══════════════════════════════════════ */
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(268px, 1fr));
+      gap: 1.1rem;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      transition: border-color var(--trans), transform var(--trans);
+    }
+    .card:hover { border-color: var(--accent); transform: translateY(-2px); }
+
+    .card-ico { font-size: 1.65rem; margin-bottom: .85rem; }
+
+    .card h3 {
+      font-family: var(--mono);
+      font-size: 0.9rem;
+      color: var(--text);
+      margin-bottom: .45rem;
+    }
+    .card p { font-size: 0.875rem; color: var(--text-muted); }
+
+    .tag-chip {
+      display: inline-block;
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--accent);
+      padding: .2rem .55rem;
+      border-radius: 4px;
+      margin-top: .85rem;
+    }
+
+    /* ══════════════════════════════════════
+       FIGURA COM LEGENDA (imagem informativa)
+    ══════════════════════════════════════ */
+    .fig-block {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      margin: 2rem 0;
+    }
+    .fig-block img {
+      width: 100%;
+      max-height: 420px;
+      object-fit: cover;
+    }
+    /* figcaption visível a todos — incluindo utilizadores de leitor de ecrã */
+    .fig-block figcaption {
+      padding: 1rem 1.5rem;
+      font-size: 0.86rem;
+      color: var(--text-muted);
+      border-top: 1px solid var(--border);
+    }
+    .fig-block figcaption strong { color: var(--text); }
+
+    /* ══════════════════════════════════════
+       VÍDEO INCORPORADO (YouTube)
+       — título descritivo + descrição textual
+         garantem acessibilidade auditiva/visual
+    ══════════════════════════════════════ */
+    .vid-block {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      margin: 2rem 0;
+    }
+    .vid-wrap {
+      position: relative;
+      padding-bottom: 56.25%;
+      height: 0;
+      overflow: hidden;
+    }
+    .vid-wrap iframe {
+      position: absolute;
+      inset: 0;
+      width: 100%; height: 100%;
+      border: none;
+    }
+    .vid-desc {
+      padding: 1rem 1.5rem;
+      font-size: 0.86rem;
+      color: var(--text-muted);
+      border-top: 1px solid var(--border);
+    }
+    .vid-desc strong { color: var(--text); }
+
+    /* Transcrição colapsável (acessibilidade auditiva) */
+    .transcript {
+      margin-top: 0.75rem;
+    }
+    .transcript summary {
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      color: var(--accent2);
+      cursor: pointer;
+      user-select: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .transcript summary::-webkit-details-marker { display: none; }
+    .transcript summary::before {
+      content: '▶';
+      font-size: 0.6rem;
+      transition: transform var(--trans);
+    }
+    details[open] .transcript summary::before { transform: rotate(90deg); }
+    .transcript-body {
+      margin-top: 0.75rem;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem 1.25rem;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      line-height: 1.8;
+    }
+
+    /* ══════════════════════════════════════
+       PROJETOS
+    ══════════════════════════════════════ */
+    .proj-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.75rem;
+      display: flex;
+      gap: 1.5rem;
+      margin-bottom: 1.1rem;
+      transition: border-color var(--trans);
+    }
+    .proj-card:hover { border-color: var(--accent2); }
+
+    .proj-num {
+      font-family: var(--mono);
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--text-dim);
+      min-width: 2.5rem;
+      line-height: 1;
+    }
+
+    .proj-body h3 {
+      font-family: var(--mono);
+      font-size: 0.95rem;
+      color: var(--text);
+      margin-bottom: 0.4rem;
+    }
+    .proj-body p { font-size: 0.875rem; color: var(--text-muted); margin-bottom: 0.65rem; }
+
+    .tags { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+    .tag {
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: .18rem .5rem;
+      border-radius: 4px;
+    }
+    .lvl { font-family: var(--mono); font-size: 0.68rem; padding: .18rem .5rem; border-radius: 4px; font-weight: 700; }
+    .lvl-i { background: rgba(0,229,160,.1);   color: var(--accent);  }
+    .lvl-m { background: rgba(249,115,22,.1);  color: var(--accent3); }
+    .lvl-a { background: rgba(239,68,68,.1);   color: #f87171;        }
+
+    /* ══════════════════════════════════════
+       RECURSOS
+    ══════════════════════════════════════ */
+    .res-list { list-style: none; }
+    .res-list li {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.25rem 1.5rem;
+      margin-bottom: .7rem;
+      display: flex;
+      gap: 1rem;
+      align-items: flex-start;
+      transition: border-color var(--trans);
+    }
+    .res-list li:hover { border-color: var(--accent2); }
+    .res-ico { font-size: 1.45rem; min-width: 2rem; }
+    .res-info h3 { font-family: var(--mono); font-size: 0.88rem; color: var(--text); margin-bottom: .25rem; }
+    .res-info p  { font-size: 0.85rem; color: var(--text-muted); margin-bottom: .4rem; }
+    .res-info a  { font-family: var(--mono); font-size: 0.75rem; color: var(--accent2); }
+
+    /* ══════════════════════════════════════
+       TABELA (recursos)
+    ══════════════════════════════════════ */
+    .tbl { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+    .tbl th {
+      font-family: var(--mono);
+      font-size: 0.73rem;
+      text-align: left;
+      padding: .75rem 1rem;
+      background: var(--surface2);
+      color: var(--accent);
+      border: 1px solid var(--border);
+      letter-spacing: .04em;
+    }
+    .tbl td {
+      padding: .75rem 1rem;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      vertical-align: top;
+    }
+    .tbl tr:nth-child(even) td { background: rgba(22,27,34,.5); }
+    .tbl td:first-child { font-family: var(--mono); font-size: 0.8rem; color: var(--text); }
+
+    /* ══════════════════════════════════════
+       RODAPÉ
+    ══════════════════════════════════════ */
+    footer {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      margin-top: 4rem;
+    }
+    .foot-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+    .foot-inner p { font-family: var(--mono); font-size: 0.72rem; color: var(--text-dim); }
+    .foot-links { display: flex; gap: 1.5rem; }
+    .foot-links a { font-family: var(--mono); font-size: 0.72rem; color: var(--text-dim); text-decoration: none; }
+    .foot-links a:hover { color: var(--accent); }
+
+    /* ══════════════════════════════════════
+       RESPONSIVO (mobile)
+    ══════════════════════════════════════ */
+    @media (max-width: 768px) {
+      .hero { grid-template-columns: 1fr; gap: 2rem; padding: 3rem 1.25rem; }
+      .hero-code { display: none; } /* código decorativo — info já está no texto */
+
+      #nav-toggle { display: flex; align-items: center; justify-content: center; }
+
+      nav {
+        display: none;
+        position: absolute;
+        top: 64px; left: 0; right: 0;
+        background: var(--surface);
+        border-bottom: 1px solid var(--border);
+        padding: 1rem;
+      }
+      nav.open  { display: block; }
+      nav ul    { flex-direction: column; gap: .2rem; }
+      nav a     { font-size: .9rem; padding: .75rem 1rem; }
+
+      .proj-card { flex-direction: column; gap: .75rem; }
+      .foot-inner { flex-direction: column; text-align: center; }
+    }
+
+    /* Sem animações para quem preferir (epilepsia / cognitivo) */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { transition: none !important; animation: none !important; }
+      html { scroll-behavior: auto; }
+    }
+
+    /* Modo de alto contraste do sistema */
+    @media (forced-colors: active) {
+      .btn-primary { forced-color-adjust: none; background: Highlight; color: HighlightText; }
+    }
+
+    /* Impressão acessível */
+    @media print {
+      header, footer, #nav-toggle { display: none; }
+      .page { display: block !important; }
+      body { background: #fff; color: #000; font-size: 12pt; }
+      a::after { content: " (" attr(href) ")"; font-size: 10pt; }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- ═══════════════════════════════════════
+       SKIP LINK — salta menu (teclado / leitor de ecrã)
+  ═══════════════════════════════════════ -->
+  <a class="skip-link" href="#conteudo-principal">Saltar para o conteúdo principal</a>
+
+  <!-- ═══════════════════════════════════════
+       CABEÇALHO
+  ═══════════════════════════════════════ -->
+  <header role="banner">
+    <div class="header-inner">
+
+      <a class="logo"
+         href="#"
+         onclick="mostrarPagina('inicio', this); return false;"
+         aria-label="Arduino PT — ir para a página inicial">
+        <span class="logo-box" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
+            <polyline points="16 18 22 12 16 6"/>
+            <polyline points="8 6 2 12 8 18"/>
+          </svg>
+        </span>
+        Arduino<span style="color:var(--text-muted)">.pt</span>
+      </a>
+
+      <!-- Botão hamburger — acessível por teclado -->
+      <button id="nav-toggle"
+              aria-expanded="false"
+              aria-controls="nav-principal"
+              aria-label="Abrir menu de navegação"
+              onclick="toggleNav()">
+        <span aria-hidden="true">☰</span>
+      </button>
+
+      <!-- Navegação principal -->
+      <nav id="nav-principal" aria-label="Navegação principal" role="navigation">
+        <ul role="list">
+          <li><a href="#" id="lnk-inicio"       onclick="mostrarPagina('inicio', this);       return false;" aria-current="page">Início</a></li>
+          <li><a href="#" id="lnk-componentes"  onclick="mostrarPagina('componentes', this);  return false;">Componentes</a></li>
+          <li><a href="#" id="lnk-projetos"     onclick="mostrarPagina('projetos', this);     return false;">Projetos</a></li>
+          <li><a href="#" id="lnk-recursos"     onclick="mostrarPagina('recursos', this);     return false;">Recursos</a></li>
+        </ul>
+      </nav>
+
+    </div>
+  </header>
+
+  <!-- ═══════════════════════════════════════
+       CONTEÚDO PRINCIPAL
+  ═══════════════════════════════════════ -->
+  <main id="conteudo-principal" tabindex="-1">
+
+    <!-- ══════════════════════════════
+         PÁGINA 1 — INÍCIO
+    ══════════════════════════════ -->
+    <article class="page active" id="page-inicio" aria-labelledby="titulo-inicio">
+
+      <!-- HERO -->
+      <section class="hero" aria-labelledby="titulo-inicio">
+        <div>
+          <span class="hero-badge" aria-label="Secção introdutória">// plataforma educativa</span>
+
+          <h1 id="titulo-inicio">O que é o <em>Arduino</em>?</h1>
+
+          <p>
+            Arduino é uma plataforma de prototipagem eletrónica de código aberto que combina
+            hardware e software acessíveis para criar projetos interativos — de LEDs a robôs.
+          </p>
+
+          <div class="btn-group">
+            <a href="#" class="btn btn-primary"
+               onclick="mostrarPagina('componentes', document.getElementById('lnk-componentes')); return false;"
+               aria-label="Ir para a página de componentes do Arduino">
+              Explorar Componentes
+            </a>
+            <a href="#" class="btn btn-outline"
+               onclick="mostrarPagina('projetos', document.getElementById('lnk-projetos')); return false;"
+               aria-label="Ir para a página de projetos práticos">
+              Ver Projetos
+            </a>
+          </div>
+        </div>
+
+        <!-- Bloco de código decorativo — marcado como imagem com descrição -->
+        <div class="hero-code"
+             role="img"
+             aria-label="Exemplo de código Arduino: função setup define o pino 13 como saída; função loop liga e desliga o LED a cada segundo usando digitalWrite e delay">
+          <div class="dots" aria-hidden="true">
+            <span class="dot dot-r"></span>
+            <span class="dot dot-y"></span>
+            <span class="dot dot-g"></span>
+          </div>
+          <div class="cl" aria-hidden="true"><span class="ln">1</span><span class="cm">// Primeiro programa</span></div>
+          <div class="cl" aria-hidden="true"><span class="ln">2</span><span class="kw">void</span>&nbsp;setup()&nbsp;{</div>
+          <div class="cl" aria-hidden="true"><span class="ln">3</span>&nbsp;&nbsp;pinMode(<span class="nm">13</span>,&nbsp;<span class="nm">OUTPUT</span>);</div>
+          <div class="cl" aria-hidden="true"><span class="ln">4</span>}</div>
+          <div class="cl" aria-hidden="true"><span class="ln">5</span></div>
+          <div class="cl" aria-hidden="true"><span class="ln">6</span><span class="kw">void</span>&nbsp;<span class="fn">loop</span>()&nbsp;{</div>
+          <div class="cl" aria-hidden="true"><span class="ln">7</span>&nbsp;&nbsp;<span class="fn">digitalWrite</span>(<span class="nm">13</span>,&nbsp;<span class="nm">HIGH</span>);</div>
+          <div class="cl" aria-hidden="true"><span class="ln">8</span>&nbsp;&nbsp;<span class="fn">delay</span>(<span class="nm">1000</span>);</div>
+          <div class="cl" aria-hidden="true"><span class="ln">9</span>&nbsp;&nbsp;<span class="fn">digitalWrite</span>(<span class="nm">13</span>,&nbsp;<span class="nm">LOW</span>);</div>
+          <div class="cl" aria-hidden="true"><span class="ln">10</span>&nbsp;&nbsp;<span class="fn">delay</span>(<span class="nm">1000</span>);</div>
+          <div class="cl" aria-hidden="true"><span class="ln">11</span>}</div>
+        </div>
+      </section>
+
+      <!-- HISTÓRIA -->
+      <section class="section" aria-labelledby="h2-historia">
+        <hr class="div" aria-hidden="true" />
+
+        <h2 class="ttl-h2" id="h2-historia">História e contexto</h2>
+        <p class="lead">De Itália para o mundo — como surgiu o Arduino?</p>
+
+        <div class="card-grid" role="list" aria-label="Marcos históricos do Arduino">
+
+          <div class="card" role="listitem">
+            <div class="card-ico" aria-hidden="true">🇮🇹</div>
+            <h3>2005 — Ivrea, Itália</h3>
+            <p>Criado no Instituto de Design Interaction de Ivrea por Massimo Banzi e David Cuartielles como ferramenta para estudantes de design sem experiência em eletrónica.</p>
+            <span class="tag-chip">Origem</span>
+          </div>
+
+          <div class="card" role="listitem">
+            <div class="card-ico" aria-hidden="true">🔓</div>
+            <h3>Código Aberto</h3>
+            <p>Hardware e software totalmente open-source. Qualquer pessoa pode estudar, modificar e partilhar os esquemas e o código sem restrições de licença.</p>
+            <span class="tag-chip">Open Source</span>
+          </div>
+
+          <div class="card" role="listitem">
+            <div class="card-ico" aria-hidden="true">🌍</div>
+            <h3>Comunidade Global</h3>
+            <p>Milhões de utilizadores em todo o mundo — estudantes, artistas, engenheiros e entusiastas que partilham projetos, tutoriais e bibliotecas gratuitamente.</p>
+            <span class="tag-chip">Comunidade</span>
+          </div>
+
+          <div class="card" role="listitem">
+            <div class="card-ico" aria-hidden="true">📚</div>
+            <h3>Ensino e Aprendizagem</h3>
+            <p>Amplamente adotado em escolas e universidades para ensinar eletrónica, programação e pensamento computacional de forma prática e motivadora.</p>
+            <span class="tag-chip">Educação</span>
+          </div>
+
+        </div>
+
+        <hr class="div" aria-hidden="true" />
+
+        <!-- VÍDEO 1 — com título, descrição textual e transcrição -->
+        <h2 class="ttl-h2" id="h2-video-intro">Vídeo introdutório</h2>
+        <p class="lead">Uma visão geral do Arduino para quem está a começar.</p>
+
+        <div class="vid-block" aria-labelledby="vdesc1">
+          <div class="vid-wrap">
+            <iframe
+              src="https://www.youtube.com/embed/nL34zDTPkcs"
+              title="Introdução ao Arduino para iniciantes — o que é, componentes básicos e primeiro programa"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowfullscreen
+              loading="lazy">
+            </iframe>
+          </div>
+          <div class="vid-desc" id="vdesc1">
+            <strong>Introdução ao Arduino para Iniciantes</strong><br>
+            O vídeo apresenta o que é o Arduino, os componentes essenciais de uma placa Uno,
+            e explica como escrever e carregar o primeiro programa (piscar um LED).
+            Duração aproximada: 10 minutos. Legendas em português disponíveis nas definições do YouTube (ícone CC).
+            <details class="transcript">
+              <summary>Ler transcrição resumida do vídeo</summary>
+              <div class="transcript-body" role="note" aria-label="Transcrição resumida do vídeo de introdução ao Arduino">
+                <p><strong>0:00 – 1:30</strong> — Apresentação do Arduino como plataforma de prototipagem open-source. O apresentador mostra uma placa Arduino Uno e identifica os principais componentes: microcontrolador, pinos digitais e analógicos, porta USB e LED integrado.</p>
+                <p><strong>1:30 – 4:00</strong> — Instalação do Arduino IDE (ambiente de programação gratuito). Demonstração do menu de seleção da placa e da porta de comunicação.</p>
+                <p><strong>4:00 – 7:30</strong> — Escrita do primeiro programa: função <em>setup()</em> para configurar o pino 13 como saída, e função <em>loop()</em> para ligar e desligar o LED com intervalos de um segundo.</p>
+                <p><strong>7:30 – 10:00</strong> — Carregamento do código para a placa e observação do LED a piscar. Explicação dos erros mais comuns para iniciantes.</p>
+              </div>
+            </details>
+          </div>
+        </div>
+
+      </section>
+    </article>
+
+
+    <!-- ══════════════════════════════
+         PÁGINA 2 — COMPONENTES
+    ══════════════════════════════ -->
+    <article class="page" id="page-componentes" aria-labelledby="titulo-componentes">
+      <div class="section">
+
+        <h1 class="ttl-h1" id="titulo-componentes">Componentes do <em>Arduino</em></h1>
+        <p class="lead">Conheça as placas, sensores e atuadores que formam o ecossistema Arduino.</p>
+
+        <!-- IMAGEM INFORMATIVA com alt detalhado e figcaption -->
+        <figure class="fig-block" aria-labelledby="fig1-cap">
+          <img
+            src="https://upload.wikimedia.org/wikipedia/commons/3/38/Arduino_Uno_-_R3.jpg"
+            alt="Fotografia do Arduino Uno R3: placa de circuito impresso azul-escuro. No centro encontra-se o microcontrolador ATmega328P (chip retangular preto). À esquerda há um conector USB tipo B para programação e alimentação via computador. Na parte superior estão os 14 pinos digitais (numerados de 0 a 13), incluindo 6 com capacidade PWM assinalados com til (~). Na parte inferior esquerda estão os 6 pinos analógicos (A0 a A5). Na parte inferior direita estão os pinos de alimentação: 3,3 V, 5 V e dois GND. Um LED laranja (pino 13) e um LED verde (power) são visíveis perto do conector USB."
+            width="800"
+            height="500"
+            loading="lazy"
+          />
+          <figcaption id="fig1-cap">
+            <strong>Figura 1 — Arduino Uno R3.</strong>
+            A placa mais popular para iniciantes. Possui 14 pinos digitais (6 com PWM),
+            6 pinos analógicos, microcontrolador ATmega328P a 16 MHz e ligação USB para
+            programação direta a partir do computador.
+            <em>Fonte: Wikimedia Commons — licença CC BY-SA 3.0.</em>
+          </figcaption>
+        </figure>
+
+        <hr class="div" aria-hidden="true" />
+        <h2 class="ttl-h2" id="h2-placas">Tipos de placas Arduino</h2>
+        <p class="lead">Cada modelo foi desenhado para um tipo de projeto específico.</p>
+
+        <div class="card-grid" role="list" aria-label="Modelos de placas Arduino e respetivas características">
+
+          <div class="card" role="listitem">
+            <div class="card-ico" aria-hidden="true">🔵</div>
+            <h3>Arduino Uno</h3>
+            <p>A placa mais usada em todo o mundo. Ideal para aprender. Usa o microcontrolador ATmega328P com 14 pinos digitais e 6 analógicos.</p>
+            <span class="tag-chip">Iniciante</span>
+          </div>
+
+          <div class="card" role="listitem">
+            <div class="card-ico" aria-hidden="true">🟢</div>
+            <h3>Arduino Nano</h3>
+            <p>Versão compacta do Uno, perfeita para projetos onde o espaço é limitado. Mesmas funcionalidades num formato muito mais pequeno.</p>
+            <span class="tag-chip">Compacto</span>
+          </div>
+
+          <div class="card" role="listitem">
+            <div class="card-ico" aria-hidden="true">🟡</div>
+            <h3>Arduino Mega 2560</h3>
+            <p>Para projetos complexos. Possui 54 pinos digitais e 16 analógicos. Muito usado em impressoras 3D e robótica avançada.</p>
+            <span class="tag-chip">Avançado</span>
+          </div>
+
+          <div class="card" role="listitem">
+            <div class="card-ico" aria-hidden="true">📶</div>
+            <h3>Arduino MKR WiFi 1010</h3>
+            <p>Placa com WiFi e Bluetooth integrados. Ideal para projetos de Internet das Coisas (IoT) e automação doméstica conectada.</p>
+            <span class="tag-chip">IoT</span>
+          </div>
+
+          <div class="card" role="listitem">
+            <div class="card-ico" aria-hidden="true">⚡</div>
+            <h3>Arduino Due</h3>
+            <p>Placa de 32 bits baseada no microcontrolador ARM Cortex-M3 a 84 MHz. A mais potente da gama standard, para aplicações de alto desempenho.</p>
+            <span class="tag-chip">Alta Performance</span>
+          </div>
+
+          <div class="card" role="listitem">
+            <div class="card-ico" aria-hidden="true">🔋</div>
+            <h3>Arduino Micro</h3>
+            <p>Versão ultra-compacta com interface USB nativa. Pode emular teclados e ratos, sendo útil em acessórios de Human Interface Device (HID).</p>
+            <span class="tag-chip">USB Nativo</span>
+          </div>
+
+        </div>
+
+        <hr class="div" aria-hidden="true" />
+        <h2 class="ttl-h2" id="h2-sensores">Sensores e atuadores mais comuns</h2>
+        <p class="lead">Componentes externos que ampliam as capacidades do Arduino.</p>
+
+        <div class="card-grid" role="list" aria-label="Sensores e atuadores frequentemente usados em projetos Arduino">
+
+          <div class="card" role="listitem">
+            <div class="card-ico" aria-hidden="true">🌡️</div>
+            <h3>Sensor de Temperatura — DHT11/22</h3>
+            <p>Mede temperatura e humidade do ar. Muito usado em estações meteorológicas caseiras e sistemas de controlo de climatização.</p>
+          </div>
+
+          <div class="card" role="listitem">
+            <div class="card-ico" aria-hidden="true">📡</div>
+            <h3>Sensor de Distância — HC-SR04</h3>
+            <p>Usa ultrassons para medir distâncias entre 2 cm e 400 cm. Aplicado em sistemas de estacionamento e robôs de evitamento de obstáculos.</p>
+          </div>
+
+          <div class="card" role="listitem">
+            <div class="card-ico" aria-hidden="true">💡</div>
+            <h3>LED</h3>
+            <p>O atuador mais simples. Díodo Emissor de Luz usado como indicador visual. Existe em várias cores e em formato de matriz ou faixa.</p>
+          </div>
+
+          <div class="card" role="listitem">
+            <div class="card-ico" aria-hidden="true">🔔</div>
+            <h3>Buzzer Piezoelétrico</h3>
+            <p>Produz sons e alertas. Com Arduino pode reproduzir melodias simples usando a função <code>tone()</code> com diferentes frequências.</p>
+          </div>
+
+          <div class="card" role="listitem">
+            <div class="card-ico" aria-hidden="true">⚙️</div>
+            <h3>Servo Motor</h3>
+            <p>Motor com controlo de posição angular preciso (0 ° a 180 °). Essencial em braços robóticos, comportas automatizadas e câmaras pan-tilt.</p>
+          </div>
+
+          <div class="card" role="listitem">
+            <div class="card-ico" aria-hidden="true">🖐️</div>
+            <h3>Botão (Push Button)</h3>
+            <p>Componente de entrada mais simples. Permite ao utilizador interagir diretamente com o sistema eletrónico através de pressão física.</p>
+          </div>
+
+        </div>
+
+        <hr class="div" aria-hidden="true" />
+
+        <!-- VÍDEO 2 — componentes físicos -->
+        <h2 class="ttl-h2" id="h2-video-comp">Vídeo — Conhecer os componentes</h2>
+        <p class="lead">Identificação visual dos principais componentes usados com Arduino.</p>
+
+        <div class="vid-block" aria-labelledby="vdesc2">
+          <div class="vid-wrap">
+            <iframe
+              src="https://www.youtube.com/embed/BtLwoNJ6klE"
+              title="Componentes electrónicos para Arduino — identificação e função de resistências, LEDs, sensores e atuadores"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowfullscreen
+              loading="lazy">
+            </iframe>
+          </div>
+          <div class="vid-desc" id="vdesc2">
+            <strong>Componentes Electrónicos para Arduino</strong><br>
+            O vídeo apresenta os componentes eletrónicos mais comuns usados em projetos Arduino:
+            resistências, condensadores, LEDs, transistores, sensores de temperatura, de distância e servo motores.
+            Para cada componente é explicada a função e como ligar à placa.
+            Duração aproximada: 12 minutos. Legendas disponíveis nas definições do YouTube (ícone CC).
+            <details class="transcript">
+              <summary>Ler transcrição resumida do vídeo</summary>
+              <div class="transcript-body" role="note" aria-label="Transcrição resumida do vídeo de componentes para Arduino">
+                <p><strong>0:00 – 2:00</strong> — Introdução ao conceito de componente eletrónico passivo e ativo. Apresentação de uma breadboard (protoboard) e explicação de como os furos estão ligados internamente.</p>
+                <p><strong>2:00 – 5:00</strong> — Resistências: leitura do código de cores, cálculo do valor em ohms e importância para proteger LEDs de sobrecarga.</p>
+                <p><strong>5:00 – 8:30</strong> — LEDs: polaridade (ânodo e cátodo), ligação correta com resistência limitadora, e demonstração prática com Arduino.</p>
+                <p><strong>8:30 – 12:00</strong> — Sensores de temperatura (DHT11), sensor ultrassónico de distância (HC-SR04) e servo motor SG90: ligação e código Arduino básico para cada um.</p>
+              </div>
+            </details>
+          </div>
+        </div>
+
+      </div>
+    </article>
+
+
+    <!-- ══════════════════════════════
+         PÁGINA 3 — PROJETOS
+    ══════════════════════════════ -->
+    <article class="page" id="page-projetos" aria-labelledby="titulo-projetos">
+      <div class="section">
+
+        <h1 class="ttl-h1" id="titulo-projetos">Projetos <em>Práticos</em></h1>
+        <p class="lead">Exemplos comentados para todos os níveis — do mais simples ao mais desafiante.</p>
+
+        <!-- NÍVEL INICIANTE -->
+        <h2 class="ttl-h2" id="h2-iniciante">Nível Iniciante</h2>
+        <p class="lead" style="margin-bottom:1.5rem">Projetos para quem está a começar com Arduino pela primeira vez.</p>
+
+        <div role="list" aria-label="Projetos de nível iniciante em Arduino">
+
+          <article class="proj-card" role="listitem" aria-labelledby="p1">
+            <span class="proj-num" aria-hidden="true">01</span>
+            <div class="proj-body">
+              <h3 id="p1">Piscar de LED — Blink</h3>
+              <p>O "Olá Mundo" do Arduino. Liga e desliga um LED no pino 13 a cada segundo, usando as funções <code>digitalWrite()</code> e <code>delay()</code>. Ensina a estrutura base de qualquer programa Arduino.</p>
+              <div class="tags">
+                <span class="tag">LED</span><span class="tag">Pinos Digitais</span>
+                <span class="tag">delay()</span><span class="lvl lvl-i">Iniciante</span>
+              </div>
+            </div>
+          </article>
+
+          <article class="proj-card" role="listitem" aria-labelledby="p2">
+            <span class="proj-num" aria-hidden="true">02</span>
+            <div class="proj-body">
+              <h3 id="p2">Semáforo com LEDs</h3>
+              <p>Simula um semáforo com três LEDs (verde, amarelo, vermelho) em sequência temporal. Ótimo para aprender a controlar vários pinos e trabalhar com temporização programada.</p>
+              <div class="tags">
+                <span class="tag">3× LED</span><span class="tag">Sequência</span>
+                <span class="tag">Temporização</span><span class="lvl lvl-i">Iniciante</span>
+              </div>
+            </div>
+          </article>
+
+          <article class="proj-card" role="listitem" aria-labelledby="p3">
+            <span class="proj-num" aria-hidden="true">03</span>
+            <div class="proj-body">
+              <h3 id="p3">Botão Liga/Desliga LED</h3>
+              <p>Usa um botão de pressão para controlar um LED. Introduz o conceito de entrada digital com <code>digitalRead()</code> e a resistência de pull-down para estabilizar o sinal.</p>
+              <div class="tags">
+                <span class="tag">Push Button</span><span class="tag">Pull-down</span>
+                <span class="tag">digitalRead()</span><span class="lvl lvl-i">Iniciante</span>
+              </div>
+            </div>
+          </article>
+
+        </div>
+
+        <hr class="div" aria-hidden="true" />
+
+        <!-- NÍVEL INTERMÉDIO -->
+        <h2 class="ttl-h2" id="h2-medio">Nível Intermédio</h2>
+        <p class="lead" style="margin-bottom:1.5rem">Projetos que combinam múltiplos componentes e bibliotecas externas.</p>
+
+        <div role="list" aria-label="Projetos de nível intermédio em Arduino">
+
+          <article class="proj-card" role="listitem" aria-labelledby="p4">
+            <span class="proj-num" aria-hidden="true">04</span>
+            <div class="proj-body">
+              <h3 id="p4">Termómetro Digital com Ecrã LCD</h3>
+              <p>Lê a temperatura e humidade com o sensor DHT11 e apresenta os valores num ecrã LCD 16×2 via comunicação I2C. Ensina a instalar e usar bibliotecas externas.</p>
+              <div class="tags">
+                <span class="tag">DHT11</span><span class="tag">LCD I2C</span>
+                <span class="tag">Bibliotecas</span><span class="lvl lvl-m">Intermédio</span>
+              </div>
+            </div>
+          </article>
+
+          <article class="proj-card" role="listitem" aria-labelledby="p5">
+            <span class="proj-num" aria-hidden="true">05</span>
+            <div class="proj-body">
+              <h3 id="p5">Sistema de Alarme com Sensor PIR</h3>
+              <p>Deteta movimento com um sensor PIR (infravermelhos passivos) e aciona um buzzer como alarme. Inclui LED de estado e temporização de desativação automática.</p>
+              <div class="tags">
+                <span class="tag">Sensor PIR</span><span class="tag">Buzzer</span>
+                <span class="tag">LED Estado</span><span class="lvl lvl-m">Intermédio</span>
+              </div>
+            </div>
+          </article>
+
+        </div>
+
+        <hr class="div" aria-hidden="true" />
+
+        <!-- NÍVEL AVANÇADO -->
+        <h2 class="ttl-h2" id="h2-avancado">Nível Avançado</h2>
+        <p class="lead" style="margin-bottom:1.5rem">Projetos complexos que integram conectividade e múltiplos sistemas.</p>
+
+        <div role="list" aria-label="Projetos de nível avançado em Arduino">
+
+          <article class="proj-card" role="listitem" aria-labelledby="p6">
+            <span class="proj-num" aria-hidden="true">06</span>
+            <div class="proj-body">
+              <h3 id="p6">Estação Meteorológica com WiFi</h3>
+              <p>Combina sensores de temperatura, humidade e pressão atmosférica com conectividade WiFi para enviar dados em tempo real a uma plataforma na nuvem (ThingSpeak ou similar).</p>
+              <div class="tags">
+                <span class="tag">WiFi</span><span class="tag">API REST</span>
+                <span class="tag">IoT</span><span class="tag">Múltiplos Sensores</span><span class="lvl lvl-a">Avançado</span>
+              </div>
+            </div>
+          </article>
+
+          <article class="proj-card" role="listitem" aria-labelledby="p7">
+            <span class="proj-num" aria-hidden="true">07</span>
+            <div class="proj-body">
+              <h3 id="p7">Braço Robótico com Servo Motores</h3>
+              <p>Controla 4 servo motores independentes para criar um braço robótico com 4 graus de liberdade. Inclui controlo via joystick analógico e função de memorização de sequências.</p>
+              <div class="tags">
+                <span class="tag">4× Servo</span><span class="tag">Joystick</span>
+                <span class="tag">PWM</span><span class="tag">Robótica</span><span class="lvl lvl-a">Avançado</span>
+              </div>
+            </div>
+          </article>
+
+        </div>
+
+        <hr class="div" aria-hidden="true" />
+
+        <!-- VÍDEO PROJETOS -->
+        <h2 class="ttl-h2" id="h2-video-proj">Tutorial em vídeo — Projeto Blink</h2>
+        <p class="lead">Construção do projeto "Piscar de LED" passo a passo, do circuito ao código.</p>
+
+        <div class="vid-block" aria-labelledby="vdesc3">
+          <div class="vid-wrap">
+            <iframe
+              src="https://www.youtube.com/embed/fCxzA9_kg6s"
+              title="Tutorial Arduino Blink — montagem do circuito com LED e resistência numa breadboard e escrita do código no IDE"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowfullscreen
+              loading="lazy">
+            </iframe>
+          </div>
+          <div class="vid-desc" id="vdesc3">
+            <strong>Tutorial Passo a Passo — Projeto Blink</strong><br>
+            O vídeo guia o utilizador na montagem do circuito (LED + resistência de 220 Ω numa breadboard)
+            e na escrita completa do código no Arduino IDE, culminando no carregamento para a placa e
+            na observação do LED a piscar. Ideal para o primeiro contacto com Arduino.
+            Duração aproximada: 8 minutos. Legendas disponíveis nas definições do YouTube (ícone CC).
+            <details class="transcript">
+              <summary>Ler transcrição resumida do vídeo</summary>
+              <div class="transcript-body" role="note" aria-label="Transcrição resumida do tutorial Blink">
+                <p><strong>0:00 – 2:00</strong> — Apresentação dos materiais necessários: placa Arduino Uno, breadboard, LED vermelho, resistência de 220 ohms, jumpers e cabo USB. O apresentador identifica cada componente e explica a sua função.</p>
+                <p><strong>2:00 – 4:30</strong> — Montagem do circuito: ligação do LED à breadboard, inserção da resistência em série e conexão dos jumpers ao pino 13 e ao GND da placa Arduino.</p>
+                <p><strong>4:30 – 6:30</strong> — Escrita do código no Arduino IDE: declaração do pino, função setup() com pinMode() e função loop() com digitalWrite() e delay(). Explicação linha a linha.</p>
+                <p><strong>6:30 – 8:00</strong> — Carregamento do código (upload) para a placa e verificação do LED a piscar com intervalo de um segundo. Dicas para resolução de erros comuns.</p>
+              </div>
+            </details>
+          </div>
+        </div>
+
+      </div>
+    </article>
+
+
+    <!-- ══════════════════════════════
+         PÁGINA 4 — RECURSOS
+    ══════════════════════════════ -->
+    <article class="page" id="page-recursos" aria-labelledby="titulo-recursos">
+      <div class="section">
+
+        <h1 class="ttl-h1" id="titulo-recursos">Recursos e <em>Referências</em></h1>
+        <p class="lead">Materiais, ferramentas e comunidades para aprofundar os conhecimentos em Arduino.</p>
+
+        <!-- DOCUMENTAÇÃO OFICIAL -->
+        <h2 class="ttl-h2" id="h2-docs">Documentação oficial</h2>
+        <p class="lead" style="margin-bottom:1.25rem">Fontes primárias e confiáveis para consulta.</p>
+
+        <ul class="res-list" aria-label="Documentação oficial do Arduino">
+
+          <li>
+            <span class="res-ico" aria-hidden="true">🌐</span>
+            <div class="res-info">
+              <h3>Arduino.cc — Site Oficial</h3>
+              <p>Documentação completa de todas as placas, referência da linguagem de programação, projetos de exemplo e fórum da comunidade mundial.</p>
+              <a href="https://www.arduino.cc"
+                 target="_blank"
+                 rel="noopener noreferrer"
+                 aria-label="Aceder ao site oficial do Arduino — abre numa nova aba">
+                arduino.cc ↗
+              </a>
+            </div>
+          </li>
+
+          <li>
+            <span class="res-ico" aria-hidden="true">📖</span>
+            <div class="res-info">
+              <h3>Arduino Language Reference (PT)</h3>
+              <p>Referência completa de todas as funções, variáveis e constantes da linguagem de programação Arduino, baseada em C/C++, disponível em português.</p>
+              <a href="https://www.arduino.cc/reference/pt/"
+                 target="_blank"
+                 rel="noopener noreferrer"
+                 aria-label="Aceder à referência da linguagem Arduino em português — abre numa nova aba">
+                arduino.cc/reference/pt ↗
+              </a>
+            </div>
+          </li>
+
+          <li>
+            <span class="res-ico" aria-hidden="true">💻</span>
+            <div class="res-info">
+              <h3>Arduino IDE — Ambiente de Programação</h3>
+              <p>Software gratuito para escrever e carregar código para a placa. Disponível em versão desktop (Windows, macOS, Linux) e online como Arduino Web Editor.</p>
+              <a href="https://www.arduino.cc/en/software"
+                 target="_blank"
+                 rel="noopener noreferrer"
+                 aria-label="Fazer download do Arduino IDE — abre numa nova aba">
+                Download gratuito ↗
+              </a>
+            </div>
+          </li>
+
+        </ul>
+
+        <hr class="div" aria-hidden="true" />
+
+        <!-- PLATAFORMAS DE APRENDIZAGEM -->
+        <h2 class="ttl-h2" id="h2-aprendizagem">Plataformas de aprendizagem</h2>
+        <p class="lead" style="margin-bottom:1.25rem">Cursos, tutoriais e simuladores para todos os níveis.</p>
+
+        <ul class="res-list" aria-label="Plataformas de aprendizagem de Arduino">
+
+          <li>
+            <span class="res-ico" aria-hidden="true">🎓</span>
+            <div class="res-info">
+              <h3>Tinkercad Circuits — Autodesk</h3>
+              <p>Simulador online e gratuito de circuitos Arduino. Permite experimentar projetos sem necessitar de hardware físico — ideal para quem está a começar ou não tem acesso a componentes.</p>
+              <a href="https://www.tinkercad.com/circuits"
+                 target="_blank"
+                 rel="noopener noreferrer"
+                 aria-label="Aceder ao Tinkercad Circuits para simular projetos Arduino — abre numa nova aba">
+                tinkercad.com ↗
+              </a>
+            </div>
+          </li>
+
+          <li>
+            <span class="res-ico" aria-hidden="true">▶️</span>
+            <div class="res-info">
+              <h3>Canal DroneBot Workshop</h3>
+              <p>Canal no YouTube com tutoriais detalhados em inglês sobre Arduino, sensores e componentes. Um dos recursos educativos gratuitos mais completos disponíveis online.</p>
+              <a href="https://www.youtube.com/@dronebotworkshop"
+                 target="_blank"
+                 rel="noopener noreferrer"
+                 aria-label="Aceder ao canal DroneBot Workshop no YouTube — abre numa nova aba">
+                YouTube ↗
+              </a>
+            </div>
+          </li>
+
+          <li>
+            <span class="res-ico" aria-hidden="true">🇧🇷</span>
+            <div class="res-info">
+              <h3>FilipeFlop — Tutoriais em Português</h3>
+              <p>Blog com centenas de tutoriais de Arduino em português, desde projetos básicos até projetos avançados com IoT, escrito por uma comunidade brasileira muito ativa.</p>
+              <a href="https://www.filipeflop.com/blog/"
+                 target="_blank"
+                 rel="noopener noreferrer"
+                 aria-label="Aceder ao blog FilipeFlop com tutoriais de Arduino em português — abre numa nova aba">
+                filipeflop.com ↗
+              </a>
+            </div>
+          </li>
+
+        </ul>
+
+        <hr class="div" aria-hidden="true" />
+
+        <!-- COMPARATIVO DE PLACAS -->
+        <h2 class="ttl-h2" id="h2-comparativo">Comparativo de placas Arduino</h2>
+        <p class="lead" style="margin-bottom:1.25rem">Resumo das especificações técnicas dos modelos mais usados.</p>
+
+        <div style="overflow-x:auto;" role="region" aria-labelledby="tbl-cap" tabindex="0">
+          <table class="tbl" aria-describedby="tbl-cap">
+            <caption id="tbl-cap" style="text-align:left;padding:.75rem 1rem;font-family:var(--mono);font-size:.78rem;color:var(--text-muted);background:var(--surface2);border:1px solid var(--border);border-bottom:none;">
+              Tabela comparativa de especificações técnicas das placas Arduino Uno, Nano, Mega e MKR WiFi 1010
+            </caption>
+            <thead>
+              <tr>
+                <th scope="col">Placa</th>
+                <th scope="col">Microcontrolador</th>
+                <th scope="col">Pinos Digitais</th>
+                <th scope="col">Pinos Analógicos</th>
+                <th scope="col">WiFi / BT</th>
+                <th scope="col">Nível</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Uno R3</td>
+                <td>ATmega328P — 16 MHz</td>
+                <td>14 (6 PWM)</td>
+                <td>6</td>
+                <td>Não</td>
+                <td>Iniciante</td>
+              </tr>
+              <tr>
+                <td>Nano</td>
+                <td>ATmega328P — 16 MHz</td>
+                <td>14 (6 PWM)</td>
+                <td>8</td>
+                <td>Não</td>
+                <td>Iniciante</td>
+              </tr>
+              <tr>
+                <td>Mega 2560</td>
+                <td>ATmega2560 — 16 MHz</td>
+                <td>54 (15 PWM)</td>
+                <td>16</td>
+                <td>Não</td>
+                <td>Avançado</td>
+              </tr>
+              <tr>
+                <td>MKR WiFi 1010</td>
+                <td>SAMD21 Cortex-M0+ — 48 MHz</td>
+                <td>8 (13 PWM)</td>
+                <td>7</td>
+                <td>WiFi + BT</td>
+                <td>Intermédio</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+      </div>
+    </article>
+
+  </main>
+
+  <!-- RODAPÉ -->
+  <footer role="contentinfo">
+    <div class="foot-inner">
+      <p>© 2025 Arduino.pt — Website Educativo de Eletrónica e Programação</p>
+      <nav class="foot-links" aria-label="Ligações do rodapé">
+        <a href="https://www.arduino.cc"
+           target="_blank"
+           rel="noopener noreferrer"
+           aria-label="Site oficial do Arduino — abre numa nova aba">
+          Arduino.cc ↗
+        </a>
+        <a href="https://www.arduino.cc/reference/pt/"
+           target="_blank"
+           rel="noopener noreferrer"
+           aria-label="Referência da linguagem Arduino em português — abre numa nova aba">
+          Referência ↗
+        </a>
+      </nav>
+    </div>
+  </footer>
+
+  <!-- ═══════════════════════════════════════
+       JAVASCRIPT — navegação, menu mobile
+  ═══════════════════════════════════════ -->
+  <script>
+    /* Mostrar página selecionada e atualizar estado do menu */
+    function mostrarPagina(id, linkAtivo) {
+      // esconde todas as páginas
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      // mostra a página pedida
+      document.getElementById('page-' + id).classList.add('active');
+
+      // atualiza aria-current
+      document.querySelectorAll('nav a').forEach(a => a.removeAttribute('aria-current'));
+      if (linkAtivo) linkAtivo.setAttribute('aria-current', 'page');
+
+      // foco no conteúdo principal (navegação por teclado / leitor de ecrã)
+      const main = document.getElementById('conteudo-principal');
+      main.focus();
+
+      // fecha menu mobile
+      fecharNav();
+
+      // volta ao topo
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    /* Menu hamburger */
+    function toggleNav() {
+      const nav = document.getElementById('nav-principal');
+      const btn = document.getElementById('nav-toggle');
+      const aberto = nav.classList.toggle('open');
+      btn.setAttribute('aria-expanded', aberto ? 'true' : 'false');
+      btn.querySelector('span').textContent = aberto ? '✕' : '☰';
+      btn.setAttribute('aria-label', aberto ? 'Fechar menu de navegação' : 'Abrir menu de navegação');
+    }
+
+    function fecharNav() {
+      const nav = document.getElementById('nav-principal');
+      const btn = document.getElementById('nav-toggle');
+      nav.classList.remove('open');
+      btn.setAttribute('aria-expanded', 'false');
+      btn.querySelector('span').textContent = '☰';
+      btn.setAttribute('aria-label', 'Abrir menu de navegação');
+    }
+
+    /* Fechar menu ao clicar fora */
+    document.addEventListener('click', function (e) {
+      const nav = document.getElementById('nav-principal');
+      const btn = document.getElementById('nav-toggle');
+      if (!nav.contains(e.target) && !btn.contains(e.target)) fecharNav();
+    });
+
+    /* Fechar menu com tecla Escape (acessibilidade por teclado) */
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') {
+        fecharNav();
+        document.getElementById('nav-toggle').focus();
+      }
+    });
+  </script>
+
+</body>
+</html>
